@@ -232,7 +232,8 @@
     
 #ifdef PHPicker
     if (@available(iOS 14, *)) {
-        PHPickerConfiguration *config = [[PHPickerConfiguration alloc] init];
+        PHPhotoLibrary *photoLibrary = [PHPhotoLibrary sharedPhotoLibrary];
+        PHPickerConfiguration *config = [[PHPickerConfiguration alloc] initWithPhotoLibrary:photoLibrary];
         config.filter = type == IMAGE ? [PHPickerFilter imagesFilter] : type == VIDEO ? [PHPickerFilter videosFilter] : [PHPickerFilter anyFilterMatchingSubfilters:@[[PHPickerFilter videosFilter], [PHPickerFilter imagesFilter]]];
         config.preferredAssetRepresentationMode = self.allowCompression ? PHPickerConfigurationAssetRepresentationModeCompatible : PHPickerConfigurationAssetRepresentationModeCurrent;
         
@@ -523,6 +524,8 @@ didPickDocumentsAtURLs:(NSArray<NSURL *> *)urls{
 
         PHPickerResult * result = [results objectAtIndex: index];
 
+        NSString *assetId = result.assetIdentifier;
+
         [result.itemProvider loadFileRepresentationForTypeIdentifier:@"public.item" completionHandler:^(NSURL * _Nullable url, NSError * _Nullable error) {
             
             if(url == nil) {
@@ -533,7 +536,7 @@ didPickDocumentsAtURLs:(NSArray<NSURL *> *)urls{
             }
             
             long timestamp = (long)([[NSDate date] timeIntervalSince1970] * 1000);
-            NSString * filenameWithoutExtension = [url.lastPathComponent stringByDeletingPathExtension];
+            NSString * filenameWithoutExtension = [assetId stringByAddingPercentEncodingWithAllowedCharacters:[NSCharacterSet URLHostAllowedCharacterSet]];
             NSString * fileExtension = url.pathExtension;
             NSString * filename = [NSString stringWithFormat:@"%@-%ld.%@", filenameWithoutExtension, timestamp, fileExtension];
             NSString * extension = [filename pathExtension];
